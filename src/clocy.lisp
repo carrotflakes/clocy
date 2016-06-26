@@ -54,16 +54,19 @@
        7))
 
 (defun next-time (specifier now)
+  (unless now
+    (return-from next-time (values nil nil)))
   (let ((spec-year   (specifier-year   specifier))
         (spec-month  (specifier-month  specifier))
         (spec-date   (specifier-date   specifier))
         (spec-day    (specifier-day    specifier))
         (spec-hour   (specifier-hour   specifier))
         (spec-minute (specifier-minute specifier))
-        (spec-second (specifier-second specifier)))
+        (spec-second (specifier-second specifier))
+        (next-time nil))
+    (declare (ignore spec-day))
     (multiple-value-bind
           (second minute hour date month year day) (decode-universal-time now)
-      (print (list second minute hour date month year))
       (labels ((step-year ()
                  (cond
                    ((null spec-year)
@@ -210,18 +213,20 @@
 
                (step-second ()
                  (cond
-                   ((null spec-second)
-                    t)
+                   ((null spec-second))
                    ((typep spec-second 'number)
                     (when (<= second spec-second)
-                       (setf second spec-second)
-                       t))
-                   ((eq spec-minute :every)
-                    t))))
+                      (setf second spec-second)))
+                   ((eq spec-minute :every)))
+                 (let ((time (encode-universal-time second minute hour date month year)))
+                   (when next-time
+                     (return-from next-time (values next-time time)))
+                   (setf next-time time)
+                   nil)))
         
-        (and (step-year)
-             (print (list second minute hour date month year))
-             (encode-universal-time second minute hour date month year))))))
+        (step-year)
+        (values next-time nil)))))
+
 
 (defun specifier-duration (specifier)
   (with-slots (day hour minute second) specifier
@@ -231,7 +236,7 @@
                         (or day 0))
                      (or hour 0)))
                (or minute 0)))
-         second)))
+         (or second 0))))
 
 (defun make-generator (specs &optional (now (get-universal-time)))
   (let ((specifier (apply #'make-specifier (cdr specs))))
@@ -247,16 +252,20 @@
        (make-repeat-generator :delta-time (specifier-duration specifier)
                               :last-time now)))))
 
+(defgeneric generate-next (generator))
+
 (defmethod generate-next ((generator next-generator))
-  (setf (next-generator-last-time generator)
-        (next-time (next-generator-specifier generator)
-                   (next-generator-last-time generator))))
+  (multiple-value-bind (next-time last-time)
+      (next-time (next-generator-specifier generator)
+                 (next-generator-last-time generator))
+    (setf (next-generator-last-time generator) last-time)
+    next-time))
 
 (defmethod generate-next ((generator after-generator))
   (unless (after-generator-end generator)
-    (setf (after-generator-end generator) t
-          (after-generator-last-time generator) (+ (after-generator-last-time generator)
-                                                   (after-generator-delta-time generator)))))
+    (setf (after-generator-end generator) t)
+    (+ (after-generator-last-time generator)
+       (after-generator-delta-time generator))))
 
 (defmethod generate-next ((generator repeat-generator))
     (setf (repeat-generator-last-time generator) (+ (repeat-generator-last-time generator)
