@@ -27,7 +27,7 @@
   delta-time
   last-time)
 
-(defun year-uruu-p (year)
+(defun leap-year-p (year)
   (or (and (= (mod year 4) 0)
            (/= (mod year 100) 0))
       (= (mod year 400) 0)))
@@ -36,7 +36,7 @@
   (case month
     ((1 3 5 7 8 10 12) 31)
     ((4 6 9 11) 30)
-    ((2) (if (year-uruu-p year)
+    ((2) (if (leap-year-p year)
              28
              29))))
 
