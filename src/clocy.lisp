@@ -92,7 +92,7 @@
                                 hour 0 minute 0 second 0)
                           (when (step-month)
                             (return t)))))))
-               
+
                (step-month ()
                  (cond
                    ((null spec-month)
@@ -135,7 +135,7 @@
                     (or (step-day)
                         (loop
                            with days = (days-in-month year month)
-                           while (<= month days)
+                           while (< date days)
                            do (incf date)
                              (setf day (compute-day year month date)
                                    hour 0 minute 0 second 0)
@@ -189,7 +189,7 @@
                            do (incf hour)
                              (setf minute 0 second 0)
                              (when (step-minute)
-                               (return t)))))))              
+                               (return t)))))))
 
                (step-minute ()
                  (cond
@@ -209,7 +209,7 @@
                            do (incf minute)
                              (setf second 0)
                              (when (step-second)
-                               (return t)))))))              
+                               (return t)))))))
 
                (step-second ()
                  (cond
@@ -223,7 +223,7 @@
                      (return-from next-time (values next-time time)))
                    (setf next-time time)
                    nil)))
-        
+
         (step-year)
         (values next-time nil)))))
 
