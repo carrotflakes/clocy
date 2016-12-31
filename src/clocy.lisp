@@ -110,7 +110,7 @@
                    ((eq spec-month :every)
                     (or (step-date)
                         (loop ; TODO (:year 2016 :month :every) と (:month :every) の違いについて・・・
-                           while (<= month 12)
+                           while (< month 12)
                            do (incf month)
                              (setf date 1
                                    day (compute-day year month date)
