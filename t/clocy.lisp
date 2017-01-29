@@ -35,23 +35,23 @@
 
 (subtest "next every"
          (let* ((time 7743600)
-                (gen (make-generator '(:next :month :every :date 2) time)))
+                (gen (make-generator '(:all :month :every :date 2) time)))
            (is (generate-next gen) (+ time (* 1 24 60 60)))
            (is (generate-next gen) (+ time (* (+ 30 1) 24 60 60))))
          
          (let* ((time 7743600)
-                (gen (make-generator '(:next :date :every :hour 1) time)))
+                (gen (make-generator '(:all :date :every :hour 1) time)))
            (is (generate-next gen) (+ time (* 1 60 60)))
            (is (generate-next gen) (+ time (* 25 60 60)))
            (is (generate-next gen) (+ time (* 49 60 60))))
          
          (let* ((time 7743600)
-                (gen (make-generator '(:next :hour :every :minute 1) time)))
+                (gen (make-generator '(:all :hour :every :minute 1) time)))
            (is (generate-next gen) (+ time (* 1 60)))
            (is (generate-next gen) (+ time (* 61 60))))
          
          (let* ((time 7743600)
-                (gen (make-generator '(:next :minute :every :second 1) time)))
+                (gen (make-generator '(:all :minute :every :second 1) time)))
            (is (generate-next gen) (+ time 1))
            (is (generate-next gen) (+ time 61))))
 

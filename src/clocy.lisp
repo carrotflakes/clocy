@@ -15,6 +15,10 @@
   second)
 
 (defstruct next-generator
+  time
+  end)
+
+(defstruct all-generator
   specifier
   last-time)
 
@@ -69,8 +73,6 @@
           (second minute hour date month year day) (decode-universal-time now)
       (labels ((step-year ()
                  (cond
-                   ((null spec-year)
-                    (step-month))
                    ((typep spec-year 'number)
                     (cond
                       ((< year spec-year)
@@ -82,7 +84,7 @@
                        (step-month))
                       ((= year spec-year)
                        (step-month))))
-                   ((eq spec-year :every)
+                   ((member spec-year '(:every nil))
                     (or (step-month)
                         (dotimes (i 8)
                           (incf year)
@@ -110,7 +112,7 @@
                    ((eq spec-month :every)
                     (or (step-date)
                         (loop ; TODO (:year 2016 :month :every) と (:month :every) の違いについて・・・
-                           while (<= month 12)
+                           while (< month 12)
                            do (incf month)
                              (setf date 1
                                    day (compute-day year month date)
@@ -242,7 +244,10 @@
   (let ((specifier (apply #'make-specifier (cdr specs))))
     (cond
       ((string= (first specs) 'next)
-       (make-next-generator   :specifier  specifier
+       (make-next-generator   :time  (next-time specifier now)
+                              :end   nil))
+      ((string= (first specs) 'all)
+       (make-all-generator    :specifier  specifier
                               :last-time  now))
       ((string= (first specs) 'after)
        (make-after-generator  :delta-time (specifier-duration specifier)
@@ -255,10 +260,15 @@
 (defgeneric generate-next (generator))
 
 (defmethod generate-next ((generator next-generator))
+  (unless (next-generator-end generator)
+    (setf (next-generator-end generator) t)
+    (next-generator-time generator)))
+
+(defmethod generate-next ((generator all-generator))
   (multiple-value-bind (next-time last-time)
-      (next-time (next-generator-specifier generator)
-                 (next-generator-last-time generator))
-    (setf (next-generator-last-time generator) last-time)
+      (next-time (all-generator-specifier generator)
+                 (all-generator-last-time generator))
+    (setf (all-generator-last-time generator) last-time)
     next-time))
 
 (defmethod generate-next ((generator after-generator))
