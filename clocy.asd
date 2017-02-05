@@ -19,7 +19,9 @@
   :depends-on ()
   :components ((:module "src"
                 :components
-                ((:file "clocy"))))
+                ((:file "util")
+                 (:file "core" :depends-on ("util"))
+                 (:file "clocy" :depends-on ("core")))))
   :description "Clocy computes the next time from the time specification."
   :long-description
   #.(with-open-file (stream (merge-pathnames
